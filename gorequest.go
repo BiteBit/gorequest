@@ -90,7 +90,15 @@ type SuperAgent struct {
 	}
 	//If true prevents clearing Superagent data and makes it possible to reuse it for the next requests
 	DoNotClearSuperAgent bool
+	Before               []Before
+	After                []After
 }
+
+// Before before request hook
+type Before func(*SuperAgent)
+
+// After after request hook
+type After func(*SuperAgent, *Response, []byte, []error)
 
 var DisableTransportSwap = false
 
@@ -983,6 +991,10 @@ func (s *SuperAgent) EndBytes(callback ...func(response Response, body []byte, e
 	)
 
 	for {
+		for _, before := range s.Before {
+			before(s)
+		}
+
 		resp, body, errs = s.getResponseBytes()
 		if errs != nil {
 			return nil, nil, errs
@@ -997,6 +1009,11 @@ func (s *SuperAgent) EndBytes(callback ...func(response Response, body []byte, e
 	if len(callback) != 0 {
 		callback[0](&respCallback, body, s.Errors)
 	}
+
+	for _, after := range s.After {
+		after(s, &resp, body, errs)
+	}
+
 	return resp, body, nil
 }
 
@@ -1311,4 +1328,14 @@ func (s *SuperAgent) AsCurlCommand() (string, error) {
 		return "", err
 	}
 	return cmd.String(), nil
+}
+
+// UseBefore use hooks before request
+func (s *SuperAgent) UseBefore(befores ...Before) {
+	s.Before = append(s.Before, befores...)
+}
+
+// UseAfter use hooks after request
+func (s *SuperAgent) UseAfter(afters ...After) {
+	s.After = append(s.After, afters...)
 }
