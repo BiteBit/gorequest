@@ -3,6 +3,7 @@ package gorequest
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"io"
@@ -92,6 +93,8 @@ type SuperAgent struct {
 	DoNotClearSuperAgent bool
 	Before               []Before
 	After                []After
+	Context              context.Context
+	Request              *http.Request
 }
 
 // Before before request hook
@@ -101,6 +104,22 @@ type Before func(*SuperAgent)
 type After func(*SuperAgent, *Response, []byte, []error)
 
 var DisableTransportSwap = false
+
+// NewWithContext new an agent with context
+func NewWithContext(ctx context.Context) *SuperAgent {
+	agent := New()
+	agent.Context = ctx
+
+	return agent
+}
+
+// NewWithRequest new an agent with http request
+func NewWithRequest(request *http.Request) *SuperAgent {
+	agent := New()
+	agent.Request = request
+
+	return agent
+}
 
 // Used to create a new SuperAgent object.
 func New() *SuperAgent {
