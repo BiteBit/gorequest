@@ -101,7 +101,7 @@ type SuperAgent struct {
 type Before func(*SuperAgent)
 
 // After after request hook
-type After func(*SuperAgent, *Response, []byte, []error)
+type After func(*SuperAgent, Response, []byte, []error)
 
 var DisableTransportSwap = false
 
@@ -1030,7 +1030,7 @@ func (s *SuperAgent) EndBytes(callback ...func(response Response, body []byte, e
 	}
 
 	for _, after := range s.After {
-		after(s, &resp, body, errs)
+		after(s, resp, body, errs)
 	}
 
 	return resp, body, nil
